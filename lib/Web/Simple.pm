@@ -132,6 +132,16 @@ so that perl will not attempt to load the application again even if
 
 is encountered in other code.
 
+One important thing to remember when using
+
+  NameOfApplication->run_if_script;
+
+At the end of your app is that this call will create an instance of your app
+for you automatically, regardless of context. An easier way to think of this
+would be if the method were more verbosely named
+
+ NameOfApplication->run_request_if_script_else_turn_coderef_for_psgi;
+
 =head1 DISPATCH STRATEGY
 
 L<Web::Simple> despite being straightforward to use, has a powerful system
@@ -205,7 +215,7 @@ cleverness). If you want to return a PSGI sub you have to wrap it into an
 array ref.
 
   sub dispatch_request {
-    [ sub { 
+    [ sub {
         my $respond = shift;
         # This is pure PSGI here, so read perldoc PSGI
     } ]
@@ -227,6 +237,20 @@ somewhere will convert it to something useful.  This allows:
     sub (.html) { response_filter { $self->render_zoom($_[0]) } },
     sub (/user/*) { $self->users->get($_[1]) },
   }
+
+An alternative to using prototypes to declare a match specification for a given
+route is to provide a Dancer like key-value list:
+
+  sub dispatch_request {
+    my $self = shift;
+    (
+      '.html' => sub { response_filter { $self->render_zoom($_[0]) } },
+      '/user/*' => sub { $self->users->get($_[1]) }<
+    )
+  }
+
+This can be useful in situations where you are generating a dispatch table
+programmatically, where setting a subroutines protoype is difficult.
 
 to render a user object to HTML, if there is an incoming URL such as:
 
