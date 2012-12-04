@@ -27,7 +27,8 @@ sub get_unpacked_body_from {
       _unpack_params($buf);
     } elsif (index($ct, 'multipart/form-data') >= 0) {
       my $p = get_unpacked_body_object_from($_[0])->param;
-      # forcible arrayification
+      # forcible arrayification (functional, $p does not belong to us,
+      # do NOT replace this with a side-effect ridden "simpler" version)
       +{
         map +(ref($p->{$_}) eq 'ARRAY'
                ? ($_ => $p->{$_})
