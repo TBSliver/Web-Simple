@@ -111,7 +111,7 @@ Web::Dispatch::HTTPMethods - Helpers to make RESTFul Dispatchers Easier
 
 =head1 DESCRIPTION
 
-Exports the most commonly used HTTP methods as subroutine helps into your
+Exports the most commonly used HTTP methods as subroutine helpers into your
 L<Web::Simple> based application.  Additionally adds an automatic HTTP code 405
 C<Method Not Allow> if none of the HTTP methods match for a given dispatch and
 also adds a dispatch rule for C<HEAD> if no C<HEAD> exists but a C<GET> does

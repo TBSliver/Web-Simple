@@ -264,7 +264,7 @@ This user object 'bubbles up' through all the wrapping middleware until it hits
 the C<response_filter> we defined, after which the return is converted to a
 true html response.
 
-However, two types of object are treated specially - a C<Plack::Component> object
+However, two types of objects are treated specially - a C<Plack::Component> object
 will have its C<to_app> method called and be used as a dispatcher:
 
   sub dispatch_request {
