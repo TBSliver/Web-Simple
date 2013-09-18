@@ -20,6 +20,13 @@ use Test::More qw(no_plan);
         [ $_[1]->reason || $_[1]->filename ],
       ]
     },
+    sub (POST + %* + %biff=) {
+      $_[1]->{bar} ||= 'EMPTY';
+      [ 200,
+        [ "Content-type" => "text/plain" ],
+        [ join(' ',@{$_[1]}{qw(biff bong)}) ]
+      ]
+    },
   }
 }
 
@@ -66,6 +73,19 @@ my $upload = run_request(
 cmp_ok($upload->code, '==', 200, '200 with multipart');
 
 is($upload->content, 'FOO BAR', 'both params returned');
+
+my $upload_splat = run_request(
+  POST 'http://localhost'
+    => Content_Type => 'form-data'
+    => Content => [
+      biff => 'frew',
+      bong => 'fru'
+    ]
+);
+
+cmp_ok($upload_splat->code, '==', 200, '200 with multipart');
+
+is($upload_splat->content, 'frew fru', 'both params returned');
 
 my $upload_wrongtype = run_request(
   POST 'http://localhost'
