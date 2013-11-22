@@ -23,8 +23,7 @@ sub run_request { $app->run_test_request( @_ ); }
 app_is_non_plack();
 plack_app_return();
 broken_route_def();
-array_with_sub();
-array_with_no_sub();
+invalid_psgi_responses();
 middleware_as_only_route();
 route_returns_middleware_plus_extra();
 route_returns_undef();
@@ -78,35 +77,25 @@ sub broken_route_def {
     like $get->content, qr[No idea how we got here with /], "the error message points out the broken definition";
 }
 
-sub array_with_sub {
-    @dispatch = (
-        sub (/) {
-            [
-                sub {
-                    [ 999, [], [""] ];
-                },
-            ];
-        }
-    );
-
-    eval { run_request( GET => 'http://localhost/' ) };
-
-    like $@, qr/Can't call method "request" on an undefined value .*MockHTTP/,
-"if a route returns an arrayref with a single sub in it, then that sub is returned as a response by WD, causing HTTP::Message::PSGI to choke";
-}
-
-sub array_with_no_sub {
-    @dispatch = (
-        sub (/) {
-            ["moo"];
-        }
-    );
-
-    eval { run_request( GET => 'http://localhost/' ) };
-
-    like $@, qr/Can't call method "request" on an undefined value .*MockHTTP/,
-"if a route returns an arrayref with a scalar that is not a sub, then WD returns that array out of the PSGI app (and causes HTTP::Message::PSGI to choke)";
+sub invalid_psgi_responses {
     undef $@;
+
+    my @responses = (
+        [ [ sub { } ], "an arrayref with a single sub in it" ],
+        [ ["moo"], "an arrayref with a scalar that is not a sub" ],
+    );
+
+    for my $response ( @responses ) {
+        @dispatch = ( sub (/) { $response->[0] } );
+
+        eval { run_request( GET => 'http://localhost/' ) };
+
+        like $@, qr/Can't call method "request" on an undefined value .*MockHTTP/,
+          sprintf(
+            "if a route returns %s, then that is returned as a response by WD, causing HTTP::Message::PSGI to choke",
+            $response->[1] );
+        undef $@;
+    }
 }
 
 sub middleware_as_only_route {
