@@ -23,6 +23,7 @@ sub run_request { $app->run_test_request( @_ ); }
 
 app_is_non_plack();
 app_is_object();
+app_is_just_sub();
 plack_app_return();
 broken_route_def();
 invalid_psgi_responses();
@@ -57,6 +58,14 @@ sub app_is_object {
     my $res = $d->call;
 
     cmp_ok $res->[0], '==', 999, "Web::Dispatch can dispatch properly, given only an object with to_app method";
+}
+
+sub app_is_just_sub {
+    my $d = Web::Dispatch->new( dispatch_app => sub () { [ 999, [], ["ok"] ] } );
+    my $res = $d->call( {} );
+
+    cmp_ok $res->[0], '==', 999,
+      "Web::Dispatch can dispatch properly, given only an app that's just a sub, with no object involved";
 }
 
 sub plack_app_return {

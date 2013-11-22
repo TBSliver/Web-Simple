@@ -21,7 +21,6 @@ has parser_class => (
 has node_class => (
   is => 'ro', default => quote_sub q{ 'Web::Dispatch::Node' }
 );
-has node_args => (is => 'ro', default => quote_sub q{ {} });
 has _parser => (is => 'lazy');
 
 after BUILDARGS => sub {
@@ -144,7 +143,12 @@ sub _to_try {
 sub _construct_node {
   my ($self, %args) = @_;
   $args{match} = $self->_parser->parse($args{match}) if !ref $args{match};
-  $self->node_class->new({ %{$self->node_args}, %args })->to_app;
+  if ( my $obj = $self->dispatch_object) {
+    # if possible, call dispatchers as methods of the app object
+    my $dispatch_sub = $args{run};
+    $args{run} = sub { $obj->$dispatch_sub(@_) };
+  }
+  $self->node_class->new(\%args)->to_app;
 }
 
 1;

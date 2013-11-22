@@ -20,7 +20,12 @@ sub call {
 sub _curry {
   my ($self, @args) = @_;
   my $run = $self->_run;
-  sub { $run->(@args, $_[0]) };
+  my $code = sub { $run->(@args, $_[0]) };
+  # if the first argument is a hashref, localize %_ to it to permit
+  # use of $_{name} inside the dispatch sub
+  ref($args[0]) eq 'HASH'
+    ? do { my $v = $args[0]; sub { local *_ = $v; &$code } }
+    : $code
 }
 
 1;
