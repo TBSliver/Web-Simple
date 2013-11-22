@@ -40,7 +40,7 @@ sub _build__dispatcher {
   my $node_args = { app_object => $self };
   weaken($node_args->{app_object});
   Web::Dispatch->new(
-    app => sub { $self->dispatch_request(@_), $final },
+    dispatch_app => sub { $self->dispatch_request(@_), $final },
     node_class => 'Web::Simple::DispatchNode',
     node_args => $node_args
   );

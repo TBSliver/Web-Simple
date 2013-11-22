@@ -22,6 +22,7 @@ my $app = MiscTest->new;
 sub run_request { $app->run_test_request( @_ ); }
 
 app_is_non_plack();
+app_is_object();
 plack_app_return();
 broken_route_def();
 invalid_psgi_responses();
@@ -36,12 +37,26 @@ sub app_is_non_plack {
 
     my $r = HTTP::Response->new( 999 );
 
-    my $d = Web::Dispatch->new( app => $r );
+    my $d = Web::Dispatch->new( dispatch_app => $r );
     eval { $d->call };
 
     like $@, qr/No idea how we got here with HTTP::Response/,
       "Web::Dispatch dies when run with an app() that is a non-PSGI object";
     undef $@;
+}
+
+sub app_is_object {
+    {
+
+        package ObjectApp;
+        use Moo;
+        sub to_app { [ 999, [], ["ok"] ] }
+    }
+
+    my $d = Web::Dispatch->new( dispatch_object => ObjectApp->new );
+    my $res = $d->call;
+
+    cmp_ok $res->[0], '==', 999, "Web::Dispatch can dispatch properly, given only an object with to_app method";
 }
 
 sub plack_app_return {

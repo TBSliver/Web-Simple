@@ -11,7 +11,10 @@ use Web::Dispatch::Node;
 
 with 'Web::Dispatch::ToApp';
 
-has app => (is => 'ro', required => 1);
+has dispatch_app => (
+  is => 'lazy', builder => sub { shift->dispatch_object->to_app }
+);
+has dispatch_object => (is => 'ro', required => 0);
 has parser_class => (
   is => 'ro', default => quote_sub q{ 'Web::Dispatch::Parser' }
 );
@@ -21,6 +24,12 @@ has node_class => (
 has node_args => (is => 'ro', default => quote_sub q{ {} });
 has _parser => (is => 'lazy');
 
+after BUILDARGS => sub {
+  my ( $self, %args ) = @_;
+  die "Either dispatch_app or dispatch_object need to be supplied."
+    if !$args{dispatch_app} and !$args{dispatch_object}
+};
+
 sub _build__parser {
   my ($self) = @_;
   $self->parser_class->new;
@@ -28,7 +37,7 @@ sub _build__parser {
 
 sub call {
   my ($self, $env) = @_;
-  my $res = $self->_dispatch($env, $self->app);
+  my $res = $self->_dispatch($env, $self->dispatch_app);
   return $res->[0] if ref($res) eq 'ARRAY' and @{$res} == 1 and ref($res->[0]) eq 'CODE';
   return $res;
 }
