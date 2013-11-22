@@ -83,6 +83,7 @@ sub invalid_psgi_responses {
     my @responses = (
         [ [ sub { } ], "an arrayref with a single sub in it" ],
         [ ["moo"], "an arrayref with a scalar that is not a sub" ],
+        [ bless( {}, "FauxObject" ), "an object without to_app method" ],
     );
 
     for my $response ( @responses ) {
