@@ -7,6 +7,7 @@ use Test::More;
 use HTTP::Request::Common qw(GET POST);
 use Web::Dispatch;
 use HTTP::Response;
+use Web::Dispatch::Predicates 'match_true';
 
 my @dispatch;
 
@@ -27,6 +28,7 @@ invalid_psgi_responses();
 middleware_as_only_route();
 route_returns_middleware_plus_extra();
 route_returns_undef();
+matcher_nonsub_pair();
 
 done_testing();
 
@@ -144,4 +146,14 @@ sub route_returns_undef {
     my $get = run_request( GET => 'http://localhost/' );
 
     cmp_ok $get->code, '==', 900, "a route that returns undef causes WD to ignore it and resume dispatching";
+}
+
+sub matcher_nonsub_pair {
+    @dispatch = ( match_true() => 5 );
+
+    my $get = run_request( GET => 'http://localhost/' );
+
+    cmp_ok $get->code, '==', 500, "a route definition that pairs a WD::Matcher a non-sub dies";
+    like $get->content, qr[No idea how we got here with Web::Dispatch::M],
+      "the error message points out the broken definition";
 }
