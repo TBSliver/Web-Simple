@@ -16,11 +16,13 @@ my @dispatch;
 
     package MiscTest;
     sub dispatch_request { @dispatch }
+    sub string_method { [ 999, [], [""] ]; }
 }
 
 my $app = MiscTest->new;
 sub run_request { $app->run_test_request( @_ ); }
 
+string_method_name();
 app_is_non_plack();
 app_is_object();
 app_is_just_sub();
@@ -33,6 +35,14 @@ route_returns_undef();
 matcher_nonsub_pair();
 
 done_testing();
+
+sub string_method_name {
+    @dispatch = ( '/' => "string_method" );
+
+    my $get = run_request( GET => 'http://localhost/' );
+
+    cmp_ok $get->code, '==', 999, "a dispatcher that's a string matching a method on the dispatch object gets executed";
+}
 
 sub app_is_non_plack {
 

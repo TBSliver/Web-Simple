@@ -126,7 +126,11 @@ sub _to_try {
     } else {
       $try
     }
-  } elsif (!ref($try) and ref($more->[0]) eq 'CODE') {
+  } elsif (!ref($try)
+    and (ref($more->[0]) eq 'CODE'
+      or (!ref($more->[0]) and $self->dispatch_object
+        and $self->dispatch_object->can($more->[0])))
+  ) {
     $self->_construct_node(match => $try, run => shift(@$more));
   } elsif (
     (blessed($try) && $try->isa('Web::Dispatch::Matcher'))
