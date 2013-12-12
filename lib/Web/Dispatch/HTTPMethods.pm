@@ -112,15 +112,16 @@ Web::Dispatch::HTTPMethods - Helpers to make RESTFul Dispatchers Easier
 =head1 DESCRIPTION
 
 Exports the most commonly used HTTP methods as subroutine helpers into your
-L<Web::Simple> based application.  Additionally adds an automatic HTTP code 405
-C<Method Not Allow> if none of the HTTP methods match for a given dispatch and
+L<Web::Simple> based application.
+Use of these methods additionally adds an automatic HTTP code 405
+C<Method Not Allowed> response if none of the HTTP methods match for a given dispatch and
 also adds a dispatch rule for C<HEAD> if no C<HEAD> exists but a C<GET> does
 (in which case the C<HEAD> returns the C<GET> dispatch with an empty body.)
 
-We also add at the end of the chain support for the OPTIONS method (if you do
-not add one yourself.  This defaults to http 200 ok + Allows http headers.
+We also add support at the end of the chain for the OPTIONS method.
+This defaults to HTTP 200 OK + Allows http headers.
 
-Also we try to set correct HTTP headers such as C<Allows> as makes sense based
+We also try to set correct HTTP headers such as C<Allows> as makes sense based
 on your dispatch chain.
 
 The following dispatch chains are basically the same:
