@@ -214,6 +214,30 @@ my $dp = Web::Dispatch::Parser->new;
 }
 
 {
+  my $spec = '(GET+/foo)|(POST+/foo)';
+  my $nest = $dp->parse($spec);
+
+  for my $method (qw( GET POST )) {
+      is_deeply(
+        [ $nest->({ PATH_INFO => '/foo', REQUEST_METHOD => $method }) ],
+        [ {} ],
+        "$spec matches $method /foo"
+      );
+      is_deeply(
+        [ $nest->({ PATH_INFO => '/bar', REQUEST_METHOD => $method }) ],
+        [],
+        "$spec does not match $method /bar"
+      );
+  }
+
+  is_deeply(
+    [ $nest->({ PATH_INFO => '/foo', REQUEST_METHOD => 'PUT' }) ],
+    [],
+    "$spec does not match PUT /foo"
+  );
+}
+
+{
   local $@;
   ok(
     !eval { $dp->parse('/foo+(GET'); 1 },
