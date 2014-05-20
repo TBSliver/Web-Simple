@@ -19,6 +19,14 @@ has _cache => (
 
 sub diag { if (DEBUG) { warn $_[0] } }
 
+sub _wtf {
+  my ($self, $error) = @_;
+  my $hat = (' ' x (pos||0)).'^';
+  warn "Warning parsing dispatch specification: ${error}\n
+${_}
+${hat} here\n";
+}
+
 sub _blam {
   my ($self, $error) = @_;
   my $hat = (' ' x (pos||0)).'^';
@@ -38,18 +46,20 @@ sub _parse_spec {
   return match_true() unless length($spec);
   for ($_[1]) {
     my @match;
+    my $close;
     PARSE: { do {
       push @match, $self->_parse_spec_section($_)
         or $self->_blam("Unable to work out what the next section is");
       if (/\G\)/gc) {
         $self->_blam("Found closing ) with no opening (") unless $nested;
+        $close = 1;
         last PARSE;
       }
       last PARSE if (pos == length);
       $match[-1] = $self->_parse_spec_combinator($_, $match[-1])
         or $self->_blam('No valid combinator - expected + or |');
     } until (pos == length) }; # accept trailing whitespace
-    if ($nested and pos == length) {
+    if (!$close and $nested and pos == length) {
       pos = $nested - 1;
       $self->_blam("No closing ) found for opening (");
     }
