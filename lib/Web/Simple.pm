@@ -864,6 +864,8 @@ Robert Sedlacek (phaylon) <r.sedlacek@shadowcat.co.uk>
 
 Hakim Cassimally (osfameron) <osfameron@cpan.org>
 
+Karen Etheridge (ether) <ether@cpan.org>
+
 =head1 COPYRIGHT
 
 Copyright (c) 2011 the Web::Simple L</AUTHOR> and L</CONTRIBUTORS>
