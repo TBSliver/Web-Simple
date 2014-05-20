@@ -1,5 +1,6 @@
 Revision history for Web-Simple
 
+0.021 - 2014-05-20
   - Handle ) as last character of composite spec
   - Allow passing method names to dispatcher
   - Added Web::Simple::Role
