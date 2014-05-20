@@ -245,7 +245,7 @@ route is to provide a Dancer like key-value list:
     my $self = shift;
     (
       '.html' => sub { response_filter { $self->render_zoom($_[0]) } },
-      '/user/*' => sub { $self->users->get($_[1]) }<
+      '/user/*' => sub { $self->users->get($_[1]) },
     )
   }
 
