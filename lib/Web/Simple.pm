@@ -246,11 +246,13 @@ route is to provide a Dancer like key-value list:
     (
       '.html' => sub { response_filter { $self->render_zoom($_[0]) } },
       '/user/*' => sub { $self->users->get($_[1]) },
+      'POST + %*' => 'handle_post',
     )
   }
 
 This can be useful in situations where you are generating a dispatch table
-programmatically, where setting a subroutines protoype is difficult.
+programmatically, where setting a subroutines protoype is difficult.  Note that
+in the example above, C<handle_post> is a method that would be called.
 
 to render a user object to HTML, if there is an incoming URL such as:
 
