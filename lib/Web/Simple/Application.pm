@@ -25,7 +25,6 @@ has '_dispatcher' => (is => 'lazy');
 sub _build__dispatcher {
   my $self = shift;
   require Web::Dispatch;
-  require Web::Simple::DispatchNode;
   my $final = $self->_build_final_dispatcher;
 
   # We need to weaken both the copy of $self that the
