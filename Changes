@@ -1,5 +1,7 @@
 Revision history for Web-Simple
 
+  - Re-dist to fix MANIFEST
+
 0.022 - 2014-05-23
   - Remove erroneous require of deleted Web::Dispatch::Node
 
