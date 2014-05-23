@@ -1,5 +1,6 @@
 Revision history for Web-Simple
 
+0.022 - 2014-05-23
   - Remove erroneous require of deleted Web::Dispatch::Node
 
 0.021 - 2014-05-20
