@@ -1,15 +1,33 @@
 package Web::Simple::Role;
+use strictures 1;
+use 5.008;
+use warnings::illegalproto ();
+use Moo::Role ();
+
+our $VERSION = '0.020';
+
+sub import {
+  my ($class, $app_package) = @_;
+  $app_package ||= caller;
+  eval "package $app_package; use Web::Dispatch::Wrapper; use Moo::Role; 1"
+    or die "Failed to setup app package: $@";
+  strictures->import;
+  warnings::illegalproto->unimport;
+}
+
+1;
+__END__
 
 =head1 NAME
 
-Web::Simple::Role
+Web::Simple::Role - Define roles for Web::Simple applications
 
 =head1 SYNOPSIS
 
   package MyApp;
   use Web::Simple;
   with MyApp::Role;
-  
+
   sub dispatch_request { ... }
 
 and in the role:
@@ -27,28 +45,12 @@ and in the role:
 
 Now C<MyApp> can also dispatch C</baz>
 
-=cut
+=head1 AUTHORS
 
-use strictures 1;
-use 5.008;
-use warnings::illegalproto ();
-use Moo::Role ();
+See L<Web::Simple> for authors.
 
-our $VERSION = '0.020';
+=head1 COPYRIGHT AND LICENSE
 
-sub import {
-  my ($class, $app_package) = @_;
-  $app_package ||= caller;
-  eval "package $app_package; use Web::Dispatch::Wrapper; use Moo::Role; 1"
-    or die "Failed to setup app package: $@";
-  strictures->import;
-  warnings::illegalproto->unimport;
-}
-
-=head1 AUTHOR
-
-osfameron@cpan.org
+See L<Web::Simple> for the copyright and license.
 
 =cut
-
-1;
