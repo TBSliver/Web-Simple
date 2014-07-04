@@ -517,9 +517,9 @@ would write:
   sub (?page=&order_by~) {
     my ($self, $page, $order_by) = @_;
     return unless $page =~ /^\d+$/;
-    $page ||= 'id';
+    $order_by ||= 'id';
     response_filter {
-      $_[1]->search_rs({}, $p);
+      $_[1]->search_rs({}, { page => $page, order_by => $order_by });
     }
   }
 
