@@ -15,4 +15,5 @@ WriteMakefile(
     'warnings::illegalproto' => '0.001',
     'Data::Dumper::Concise' => '2.020',
   },
+  realclean => { FILES => [ 'Distar/', 'MANIFEST*' ] },
 );
