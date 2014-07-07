@@ -64,7 +64,8 @@ sub app_is_object {
         sub to_app { [ 999, [], ["ok"] ] }
     }
 
-    my $d = Web::Dispatch->new( dispatch_object => ObjectApp->new );
+    my $o = ObjectApp->new;
+    my $d = Web::Dispatch->new( dispatch_object => $o );
     my $res = $d->call;
 
     cmp_ok $res->[0], '==', 999, "Web::Dispatch can dispatch properly, given only an object with to_app method";

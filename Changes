@@ -1,5 +1,8 @@
 Revision history for Web-Simple
 
+  - fixes a memory leak that occurs when calling
+    Web::Simple::Application::to_psgi_app
+
 0.024 - 2014-07-03
   - small documentation fixes
 

@@ -14,7 +14,7 @@ with 'Web::Dispatch::ToApp';
 has dispatch_app => (
   is => 'lazy', builder => sub { shift->dispatch_object->to_app }
 );
-has dispatch_object => (is => 'ro', required => 0);
+has dispatch_object => (is => 'ro', required => 0, weak_ref => 1);
 has parser_class => (
   is => 'ro', default => quote_sub q{ 'Web::Dispatch::Parser' }
 );
