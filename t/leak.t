@@ -1,8 +1,9 @@
 use strictures;
-use Test::More eval { require Devel::Cycle } ? 'no_plan' : ( skip_all => 'No Devel::Cycle' );
+use Test::More;
+
+plan skip_all => 'No Devel::Cycle' unless eval { require Devel::Cycle; 1 };
 
 use Web::Simple;
-use Devel::Cycle;
 
 my $counter;
 my $on_cycle = sub { Devel::Cycle::_do_report( ++$counter, shift ) };
