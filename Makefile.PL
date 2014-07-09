@@ -44,7 +44,6 @@ WriteMakefile(
           'Sub::Quote' => '0',
           'Syntax::Keyword::Gather' => '1.001',
           'URI' => '0',
-          'XML::Tags' => '0',
           'base' => '0',
           'overload' => '0',
           'strict' => '0',
