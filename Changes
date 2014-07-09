@@ -1,5 +1,7 @@
 Revision history for Web-Simple
 
+  - fix prerequisite declarations on older toolchain
+
 0.026 - 2014-07-09
   - remove erroneous XML::Tags prereq
 
