@@ -3,7 +3,7 @@ package Web::Dispatch::HTTPMethods;
 use strictures 1;
 use Web::Dispatch::Predicates qw(match_method);
 use Scalar::Util qw(blessed);
-use base qw(Exporter);
+use Exporter 'import';
 
 our @EXPORT = qw(GET HEAD POST PUT DELETE OPTIONS);
 

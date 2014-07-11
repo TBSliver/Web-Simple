@@ -1,5 +1,7 @@
 Revision history for Web-Simple
 
+  - remove use of 'use base'
+
 0.027 - 2014-07-11
   - stable release of 0.026_001
 

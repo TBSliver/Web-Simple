@@ -2,7 +2,8 @@ use strictures 1;
 
 {
   package Web::Dispatch::Upload;
-  use base qw(Plack::Request::Upload);
+  require Plack::Request::Upload;
+  our @ISA = qw(Plack::Request::Upload);
   use overload '""' => 'tempname', fallback => 1;
 
   sub is_upload { 1 }

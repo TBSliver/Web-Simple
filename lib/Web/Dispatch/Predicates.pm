@@ -1,7 +1,7 @@
 package Web::Dispatch::Predicates;
 
 use strictures 1;
-use base qw(Exporter);
+use Exporter 'import';
 
 our @EXPORT = qw(
   match_and match_or match_not match_method match_path match_path_strip
