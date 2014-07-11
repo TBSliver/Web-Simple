@@ -4,7 +4,7 @@ use 5.008;
 use warnings::illegalproto ();
 use Moo::Role ();
 
-our $VERSION = '0.026_001'; # TRIAL RELEASE
+our $VERSION = '0.027';
 
 sub import {
   my ($class, $app_package) = @_;

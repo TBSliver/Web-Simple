@@ -1,5 +1,7 @@
 Revision history for Web-Simple
 
+  - stable release of 0.026_001
+
 0.026_001 - 2014-07-09
   - fix prerequisite declarations on older toolchain
 
