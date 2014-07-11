@@ -1,6 +1,5 @@
 package Web::Simple::Role;
 use strictures 1;
-use 5.008;
 use warnings::illegalproto ();
 use Moo::Role ();
 

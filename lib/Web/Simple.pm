@@ -1,7 +1,6 @@
 package Web::Simple;
 
 use strictures 1;
-use 5.008;
 use warnings::illegalproto ();
 use Moo ();
 use Web::Dispatch::Wrapper ();
