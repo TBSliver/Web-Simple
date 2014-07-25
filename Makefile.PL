@@ -13,10 +13,10 @@ my %WriteMakefileArgs = (
     'meta-spec' => { version => 2 },
     dynamic_config => 0,
     resources => {
-      # r/w: p5sagit@git.shadowcat.co.uk:Web-Simple.git
+      # r/w: catagits@git.shadowcat.co.uk:Web-Simple.git
       repository => {
-        url => 'git://git.shadowcat.co.uk/p5sagit/Web-Simple.git',
-        web => 'http://git.shadowcat.co.uk/gitweb/gitweb.cgi?p=p5sagit/Web-Simple.git',
+        url => 'git://git.shadowcat.co.uk/catagits/Web-Simple.git',
+        web => 'http://git.shadowcat.co.uk/gitweb/gitweb.cgi?p=catagits/Web-Simple.git',
         type => 'git',
       },
       bugtracker => {
