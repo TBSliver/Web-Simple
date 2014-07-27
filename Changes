@@ -1,5 +1,7 @@
 Revision history for Web-Simple
 
+  - fix repository metadata (Thomas Sibley)
+
 0.028 - 2014-07-11
   - remove use of 'use base'
   - lower minimum required version of perl properly down to 5.6
