@@ -78,6 +78,9 @@ for (qw(configure build test runtime)) {
 
 $WriteMakefileArgs{MIN_PERL_VERSION} = delete $WriteMakefileArgs{PREREQ_PM}{perl} || 0;
 
+die 'attention developer: you need to do a sane meta merge here!'
+  if keys %{$WriteMakefileArgs{BUILD_REQUIRES}};
+
 $WriteMakefileArgs{BUILD_REQUIRES} = {
     %{$WriteMakefileArgs{BUILD_REQUIRES} || {}},
     %{delete $WriteMakefileArgs{TEST_REQUIRES}}
@@ -90,5 +93,14 @@ $WriteMakefileArgs{PREREQ_PM} = {
 
 delete $WriteMakefileArgs{CONFIGURE_REQUIRES}
   if $eumm_version < 6.51_03;
+
+delete $WriteMakefileArgs{MIN_PERL_VERSION}
+  if $eumm_version < 6.48;
+
+delete @WriteMakefileArgs{qw(META_ADD META_MERGE)}
+  if $eumm_version < 6.46;
+
+delete $WriteMakefileArgs{LICENSE}
+  if $eumm_version < 6.31;
 
 WriteMakefile(%WriteMakefileArgs);
