@@ -95,7 +95,7 @@ Importing L<strictures> will automatically make your code use the C<strict> and
 C<warnings> pragma, so you can skip the usual:
 
   use strict;
-  use warnings FATAL => 'aa';
+  use warnings FATAL => 'all';
 
 provided you 'use Web::Simple' at the top of the file. Note that we turn
 on *fatal* warnings so if you have any warnings at any point from the file
