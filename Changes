@@ -1,5 +1,7 @@
 Revision history for Web-Simple
 
+  - make dispatch_misc.t handle Plack's MockHTTP's on error behaviour changing
+
 0.029 - 2014-07-27
   - fix repository metadata (Thomas Sibley)
 

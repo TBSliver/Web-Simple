@@ -126,12 +126,22 @@ sub invalid_psgi_responses {
     for my $response ( @responses ) {
         @dispatch = ( sub (/) { $response->[0] } );
 
-        eval { run_request( GET => 'http://localhost/' ) };
-
-        like $@, qr/Can't call method "request" on an undefined value .*MockHTTP/,
-          sprintf(
+        my $message = sprintf(
             "if a route returns %s, then that is returned as a response by WD, causing HTTP::Message::PSGI to choke",
-            $response->[1] );
+            $response->[1]
+        );
+
+        # Somewhere between 1.0028 and 1.0031 Plack changed so that the
+        # FauxObject case became a 500 rather than a die; in case it later does
+        # the same thing for other stuff, just accept either sort of error
+
+        my $res = eval { run_request( GET => 'http://localhost/' ) };
+
+        if ($res) {
+          ok $res->is_error, $message;
+        } else {
+          like $@, qr/Can't call method "request" on an undefined value .*MockHTTP/, $message;
+        }
         undef $@;
     }
 }
