@@ -58,7 +58,6 @@ my %WriteMakefileArgs = (
       },
     },
   },
-  realclean => { FILES => [ 'Distar/', 'MANIFEST*' ] },
 );
 
 my $eumm_version  = eval $ExtUtils::MakeMaker::VERSION;
