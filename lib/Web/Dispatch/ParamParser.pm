@@ -35,6 +35,17 @@ sub get_unpacked_body_from {
                : ($_ => [ $p->{$_} ])
              ), keys %$p
       };
+    } elsif (index($ct, 'application/json') >= 0) {
+      $_[0]->{'psgi.input'}->read(my $buf, $_[0]->{CONTENT_LENGTH});
+      require JSON::MaybeXS;
+      if (my $data = eval {
+        my %data = %{JSON::MaybeXS::decode_json($buf)};
+        +{ map +($_ => [ $data{$_} ]), keys %data };
+      }) {
+        $data
+      } else {
+        {}
+      }
     } else {
       {}
     }

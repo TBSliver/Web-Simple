@@ -38,6 +38,17 @@ sub call {
   my ($self, $env) = @_;
   my $res = $self->_dispatch($env, $self->dispatch_app);
   return $res->[0] if ref($res) eq 'ARRAY' and @{$res} == 1 and ref($res->[0]) eq 'CODE';
+  if (ref($res) eq 'HASH') {
+    $res = [ 200, [], $res ];
+  }
+  if (ref($res) eq 'ARRAY' and ref($res->[2]) eq 'HASH') {
+    require JSON::MaybeXS;
+    $res = [
+      $res->[0],
+      [ 'Content-type' => 'application/json', @{$res->[1]} ],
+      [ JSON::MaybeXS::encode_json($res->[2]) ],
+    ];
+  }
   return $res;
 }
 
