@@ -44,10 +44,10 @@ Web::Simple - A quick and easy way to build simple web applications
   use Web::Simple;
 
   sub dispatch_request {
-    sub (GET) {
+    GET => sub {
       [ 200, [ 'Content-type', 'text/plain' ], [ 'Hello world!' ] ]
     },
-    sub () {
+    '' => sub {
       [ 405, [ 'Content-type', 'text/plain' ], [ 'Method not allowed' ] ]
     }
   }
@@ -152,41 +152,45 @@ and nested subdispatchers.
 =head2 Examples
 
  sub dispatch_request {
-   # matches: GET /user/1.htm?show_details=1
-   #          GET /user/1.htm
-   sub (GET + /user/* + ?show_details~ + .htm|.html|.xhtml) {
-     my ($self, $user_id, $show_details) = @_;
-     ...
-   },
-   # matches: POST /user?username=frew
-   #          POST /user?username=mst&first_name=matt&last_name=trout
-   sub (POST + /user + ?username=&*) {
-      my ($self, $username, $misc_params) = @_;
-     ...
-   },
-   # matches: DELETE /user/1/friend/2
-   sub (DELETE + /user/*/friend/*) {
-     my ($self, $user_id, $friend_id) = @_;
-     ...
-   },
-   # matches: PUT /user/1?first_name=Matt&last_name=Trout
-   sub (PUT + /user/* + ?first_name~&last_name~) {
-     my ($self, $user_id, $first_name, $last_name) = @_;
-     ...
-   },
-   sub (/user/*/...) {
-     my $user_id = $_[1];
-     # matches: PUT /user/1/role/1
-     sub (PUT + /role/*) {
-       my $role_id = $_[1];
+   (
+     # matches: GET /user/1.htm?show_details=1
+     #          GET /user/1.htm
+     'GET + /user/* + ?show_details~ + .htm|.html|.xhtml' => sub {
+       my ($self, $user_id, $show_details) = @_;
        ...
      },
-     # matches: DELETE /user/1/role/1
-     sub (DELETE + /role/*) {
-       my $role_id = $_[1];
+     # matches: POST /user?username=frew
+     #          POST /user?username=mst&first_name=matt&last_name=trout
+     'POST + /user + ?username=&*' => sub {
+        my ($self, $username, $misc_params) = @_;
        ...
      },
-   },
+     # matches: DELETE /user/1/friend/2
+     'DELETE + /user/*/friend/*' => sub {
+       my ($self, $user_id, $friend_id) = @_;
+       ...
+     },
+     # matches: PUT /user/1?first_name=Matt&last_name=Trout
+     'PUT + /user/* + ?first_name~&last_name~' => sub {
+       my ($self, $user_id, $first_name, $last_name) = @_;
+       ...
+     },
+     '/user/*/...' => sub {
+       my $user_id = $_[1];
+       (
+         # matches: PUT /user/1/role/1
+         'PUT + /role/*' => sub {
+           my $role_id = $_[1];
+           ...
+         },
+         # matches: DELETE /user/1/role/1
+         'DELETE + /role/*' => sub {
+           my $role_id = $_[1];
+           ...
+         },
+       );
+     },
+   );
  }
 
 =head2 The dispatch cycle
@@ -200,13 +204,17 @@ here and return a PSGI response arrayref if you want:
     [ 404, [ 'Content-type' => 'text/plain' ], [ 'Amnesia == fail' ] ]
   }
 
-However, generally, instead of that, you return a set of dispatch subs:
+However, generally, instead of that, you return a set of route/target
+pairs:
 
   sub dispatch_request {
     my $self = shift;
-    sub (/) { redispatch_to '/index.html' },
-    sub (/user/*) { $self->show_user($_[1]) },
-    ...
+    (
+      '/' => sub { redispatch_to '/index.html' },
+      '/user/*' => sub { $self->show_user($_[1]) },
+      'POST + %*' => 'handle_post',
+      ...
+    );
   }
 
 Well, a sub is a valid PSGI response too (for ultimate streaming and async
@@ -220,9 +228,9 @@ array ref.
     } ]
   }
 
-If you return a subroutine with a prototype, the prototype is treated
-as a match specification - and if the test is passed, the body of the
-sub is called as a method and passed any matched arguments (see below for more details).
+If you return a string followed by a subroutine or method name, the string is
+treated as a match specification - and if the test is passed, the subroutine
+is called as a method and passed any matched arguments (see below for more details).
 
 You can also return a plain subroutine which will be called with just C<$env>
 - remember that in this case if you need C<$self> you B<must> close over it.
@@ -233,25 +241,26 @@ somewhere will convert it to something useful.  This allows:
 
   sub dispatch_request {
     my $self = shift;
-    sub (.html) { response_filter { $self->render_zoom($_[0]) } },
-    sub (/user/*) { $self->users->get($_[1]) },
+    (
+      '.html' => sub { response_filter { $self->render_zoom($_[0]) } },
+      '/user/*' => sub { $self->users->get($_[1]) },
+    );
   }
 
-An alternative to using prototypes to declare a match specification for a given
-route is to provide a Dancer like key-value list:
+An alternative to using string + suborutine to declare a route is to use
+the sub prototype -
 
   sub dispatch_request {
     my $self = shift;
     (
-      '.html' => sub { response_filter { $self->render_zoom($_[0]) } },
-      '/user/*' => sub { $self->users->get($_[1]) },
-      'POST + %*' => 'handle_post',
+      sub (.html) { response_filter { $self->render_zoom($_[0]) } },
+      sub (/user/) { $self->users->get($_[1]) },
+      $self->can('handle_post'), # if declared as 'sub handle_post (...) {'
     )
   }
 
-This can be useful in situations where you are generating a dispatch table
-programmatically, where setting a subroutines protoype is difficult.  Note that
-in the example above, C<handle_post> is a method that would be called.
+This can be useful sugar, especially if you want to keep method-based
+dispatchers' route specifications on the methods.
 
 to render a user object to HTML, if there is an incoming URL such as:
 
@@ -270,8 +279,10 @@ will have its C<to_app> method called and be used as a dispatcher:
 
   sub dispatch_request {
     my $self = shift;
-    sub (/static/...) { Plack::App::File->new(...) },
-    ...
+    (
+      '/static/...' => sub { Plack::App::File->new(...) },
+      ...
+    );
   }
 
 A L<Plack::Middleware> object will be used as a filter for the rest of the
@@ -281,15 +292,17 @@ dispatch being returned into:
 
   sub dispatch_request {
     my $self = shift;
-    sub (/admin/**) {
-      Plack::Middleware::Session->new(%opts);
-    },
-    sub (/admin/track_usage) {
-      ## something that needs a session
-    },
-    sub (/admin/delete_accounts) {
-      ## something else that needs a session
-    },
+    (
+      '/admin/**' => sub {
+        Plack::Middleware::Session->new(%opts);
+      },
+      '/admin/track_usage' => sub {
+        ## something that needs a session
+      },
+      '/admin/delete_accounts' => sub {
+        ## something else that needs a session
+      },
+    );
   }
 
 Note that this is for the dispatch being B<returned> to, so if you want to
@@ -299,17 +312,21 @@ provide it inline you need to do:
 
   sub dispatch_request {
     my $self = shift;
-    sub (/admin/...) {
-      sub {
-        Plack::Middleware::Session->new(%opts);
-      },
-      sub (/track_usage) {
-        ## something that needs a session
-      },
-      sub (/delete_accounts) {
-        ## something else that needs a session
-      },
-    }
+    (
+      '/admin/...' => sub {
+        (
+          sub {
+            Plack::Middleware::Session->new(%opts);
+          },
+          '/track_usage' => sub {
+            ## something that needs a session
+          },
+          '/delete_accounts' => sub {
+            ## something else that needs a session
+          },
+        );
+      }
+    );
   }
 
 And that's it - but remember that all this happens recursively - it's
@@ -320,40 +337,40 @@ dispatchers and then hit all added filters or L<Plack::Middleware>.
 
 =head3 Method matches
 
-  sub (GET) {
+  'GET' => sub {
 
 A match specification beginning with a capital letter matches HTTP requests
 with that request method.
 
 =head3 Path matches
 
-  sub (/login) {
+  '/login' => sub {
 
 A match specification beginning with a / is a path match. In the simplest
 case it matches a specific path. To match a path with a wildcard part, you
 can do:
 
-  sub (/user/*) {
+  '/user/*' => sub {
     $self->handle_user($_[1])
 
 This will match /user/<anything> where <anything> does not include a literal
 / character. The matched part becomes part of the match arguments. You can
 also match more than one part:
 
-  sub (/user/*/*) {
+  '/user/*/*' => sub {
     my ($self, $user_1, $user_2) = @_;
 
-  sub (/domain/*/user/*) {
+  '/domain/*/user/*' => sub {
     my ($self, $domain, $user) = @_;
 
 and so on. To match an arbitrary number of parts, use C<**>:
 
-  sub (/page/**) {
+  '/page/**' => sub {
     my ($self, $match) = @_;
 
 This will result in a single element for the entire match. Note that you can do
 
-  sub (/page/**/edit) {
+  '/page/**/edit' => sub {
 
 to match an arbitrary number of parts up to but not including some final
 part.
@@ -369,7 +386,7 @@ can be modified by using C<*.*> and C<**.*> in the final position, e.g.:
 
 Finally,
 
-  sub (/foo/...) {
+  '/foo/...' => sub {
 
 Will match C</foo/> on the beginning of the path B<and> strip it. This is
 designed to be used to construct nested dispatch structures, but can also prove
@@ -385,7 +402,7 @@ specification will match like this:
 
 Almost the same,
 
-  sub (/foo...) {
+  '/foo...' => sub {
 
 Will match on C</foo/bar/baz>, but also include C</foo>.  Otherwise it
 operates the same way as C</foo/...>.
@@ -399,27 +416,33 @@ the first case, this is expecting to find something after C</foo> (and fails to
 match if nothing is found), while in the second case we can match both C</foo>
 and C</foo/more/to/come>.  The following are roughly the same:
 
-  sub (/foo)   { 'I match /foo' },
-  sub (/foo/...) {
-    sub (/bar) { 'I match /foo/bar' },
-    sub (/*)   { 'I match /foo/{id}' },
+  '/foo'     => sub { 'I match /foo' },
+  '/foo/...' => sub {
+    (
+      '/bar' => sub { 'I match /foo/bar' },
+      '/*'   => sub { 'I match /foo/{id}' },
+    );
   }
 
 Versus
 
-  sub (/foo...) {
-    sub (~)    { 'I match /foo' },
-    sub (/bar) { 'I match /foo/bar' },
-    sub (/*)   { 'I match /foo/{id}' },
+  '/foo...' => sub {
+    (
+      '~'    => sub { 'I match /foo' },
+      '/bar' => sub { 'I match /foo/bar' },
+      '/*'   => sub { 'I match /foo/{id}' },
+    );
   }
 
 You may prefer the latter example should you wish to take advantage of
 subdispatchers to scope common activities.  For example:
 
-  sub (/user...) {
+  '/user...' => sub {
     my $user_rs = $schema->resultset('User');
-    sub (~) { $user_rs },
-    sub (/*) { $user_rs->find($_[1]) },
+    (
+      '~' => sub { $user_rs },
+      '/*' => sub { $user_rs->find($_[1]) },
+    );
   }
 
 You should note the special case path match C<sub (~)> which is only meaningful
@@ -430,25 +453,25 @@ when it is contained in this type of path match. It matches to an empty path.
 Any C<*>, C<**>, C<*.*>, or C<**.*> match can be followed with C<:name> to make it into a named
 match, so:
 
-  sub (/*:one/*:two/*:three/*:four) {
+  '/*:one/*:two/*:three/*:four' => sub {
     "I match /1/2/3/4 capturing { one => 1, two =>  2, three => 3, four => 4 }"
   }
   
-  sub (/**.*:allofit) {
+  '/**.*:allofit' => sub {
     "I match anything capturing { allofit => \$whole_path }"
   }
 
 In the specific case of a simple single-* match, the * may be omitted, to
 allow you to write:
 
-  sub (/:one/:two/:three/:four) {
+  '/:one/:two/:three/:four' => sub {
     "I match /1/2/3/4 capturing { one => 1, two =>  2, three => 3, four => 4 }"
   }
 
 =head4 C</foo> and C</foo/> are different specs
 
-As you may have noticed with the difference between C<sub(/foo/...)> and
-C<sub(/foo...)>, trailing slashes in path specs are significant. This is
+As you may have noticed with the difference between C<'/foo/...'> and
+C<'/foo...'>, trailing slashes in path specs are significant. This is
 intentional and necessary to retain the ability to use relative links on
 websites. Let's demonstrate on this link:
 
@@ -462,18 +485,18 @@ This makes it necessary to be explicit about the trailing slash.
 
 =head3 Extension matches
 
-  sub (.html) {
+  '.html' => sub {
 
 will match .html from the path (assuming the subroutine itself returns
 something, of course). This is normally used for rendering - e.g.:
 
-  sub (.html) {
+  '.html' => sub {
     response_filter { $self->render_html($_[1]) }
   }
 
 Additionally,
 
-  sub (.*) {
+  '.*' => sub {
 
 will match any extension and supplies the extension as a match argument.
 
@@ -481,8 +504,8 @@ will match any extension and supplies the extension as a match argument.
 
 Query and body parameters can be match via
 
-  sub (?<param spec>) { # match URI query
-  sub (%<param spec>) { # match body params
+  '?<param spec>' => sub { # match URI query
+  '%<param spec>' => sub { # match body params
 
 The body spec will match if the request content is either
 application/x-www-form-urlencoded or multipart/form-data - the latter
@@ -513,7 +536,7 @@ and multiple values are found, the last one will be used.
 For example to match a C<page> parameter with an optional C<order_by> parameter one
 would write:
 
-  sub (?page=&order_by~) {
+  '?page=&order_by~' => sub {
     my ($self, $page, $order_by) = @_;
     return unless $page =~ /^\d+$/;
     $order_by ||= 'id';
@@ -526,19 +549,19 @@ to implement paging and ordering against a L<DBIx::Class::ResultSet> object.
 
 Another Example: To get all parameters as a hashref of arrayrefs, write:
 
-  sub(?@*) {
+  '?@*' => sub {
     my ($self, $params) = @_;
     ...
 
 To get two parameters as a hashref, write:
 
-  sub(?:user~&:domain~) {
+  '?:user~&:domain~' => sub {
     my ($self, $params) = @_; # params contains only 'user' and 'domain' keys
 
 You can also mix these, so:
 
-  sub (?foo=&@bar~&:coffee=&@*) {
-     my ($self, $foo, $bar, $params);
+  '?foo=&@bar~&:coffee=&@*' => sub {
+     my ($self, $foo, $bar, $params) = @_;
 
 where $bar is an arrayref (possibly an empty one), and $params contains
 arrayref values for all parameters B<not> mentioned and a scalar value for
@@ -551,7 +574,7 @@ single C<$params>, as in the example above.
 
 =head3 Upload matches
 
-  sub (*foo=) { # param specifier can be anything valid for query or body
+  '*foo=' => sub { # param specifier can be anything valid for query or body
 
 The upload match system functions exactly like a query/body match, except
 that the values returned (if any) are C<Web::Dispatch::Upload> objects.
@@ -579,44 +602,44 @@ filename to make copying it somewhere else easier to handle.
 
 Matches may be combined with the + character - e.g.
 
-  sub (GET + /user/*) {
+  'GET + /user/*' => sub {
 
 to create an AND match. They may also be combined withe the | character - e.g.
 
-  sub (GET|POST) {
+  'GET|POST' => sub {
 
 to create an OR match. Matches can be nested with () - e.g.
 
-  sub ((GET|POST) + /user/*) {
+  '(GET|POST + /user/*)' => sub {
 
 and negated with ! - e.g.
 
-  sub (!/user/foo + /user/*) {
+  '!/user/foo + /user/*' => sub {
 
 ! binds to the immediate rightmost match specification, so if you want
 to negate a combination you will need to use
 
-  sub ( !(POST|PUT|DELETE) ) {
+  '!(POST|PUT|DELETE)' => sub {
 
 and | binds tighter than +, so
 
-  sub ((GET|POST) + /user/*) {
+  '(GET|POST) + /user/*' => sub {
 
 and
 
-  sub (GET|POST + /user/*) {
+  'GET|POST + /user/*' => sub {
 
 are equivalent, but
 
-  sub ((GET + /admin/...) | (POST + /admin/...)) {
+  '(GET + /admin/...) | (POST + /admin/...)' => sub {
 
 and
 
-  sub (GET + /admin/... | POST + /admin/...) {
+  'GET + /admin/... | POST + /admin/...' => sub {
 
 are not - the latter is equivalent to
 
-  sub (GET + (/admin/...|POST) + /admin/...) {
+  'GET + (/admin/...|POST) + /admin/...' => sub {
 
 which will never match!
 
@@ -624,12 +647,12 @@ which will never match!
 
 Note that for legibility you are permitted to use whitespace:
 
-  sub (GET + /user/*) {
+  'GET + /user/*' => sub {
 
 but it will be ignored. This is because the perl parser strips whitespace
 from subroutine prototypes, so this is equivalent to
 
-  sub (GET+/user/*) {
+  'GET+/user/*' => sub {
 
 =head3 Accessing parameters via C<%_>
 
@@ -639,7 +662,7 @@ will be accessible via C<%_>.
 
 This can be used to access your path matches, if they are named:
 
-  sub (GET + /foo/:path_part) {
+  'GET + /foo/:path_part' => sub {
     [ 200,
       ['Content-type' => 'text/plain'],
       ["We are in $_{path_part}"],
@@ -649,7 +672,7 @@ This can be used to access your path matches, if they are named:
 Or, if your first argument would be a hash reference containing named
 query parameters:
 
-  sub (GET + /foo + ?:some_param=) {
+  'GET + /foo + ?:some_param=' => sub {
     [ 200,
       ['Content-type' => 'text/plain'],
       ["We received $_{some_param} as parameter"],
@@ -659,7 +682,7 @@ query parameters:
 Of course this also works when all you are doing is slurping the whole set
 of parameters by their name:
 
-  sub (GET + /foo + ?*) {
+  'GET + /foo + ?*' => sub {
     [ 200,
       ['Content-type' => 'text/plain'],
       [exists($_{foo}) ? "Received a foo: $_{foo}" : "No foo!"],
@@ -682,7 +705,7 @@ you can either use a plain sub:
 
 or use the C<PSGI_ENV> constant exported to retrieve it from C<@_>:
 
-  sub (GET + /foo + ?some_param=) {
+  'GET + /foo + ?some_param=' => sub {
     my $param = $_[1];
     my $env = $_[PSGI_ENV];
   }
@@ -741,8 +764,10 @@ dispatch {} has gone away - instead, you write:
 
   sub dispatch_request {
     my $self = shift;
-    sub (GET /foo/) { ... },
-    ...
+    (
+      'GET /foo/' => sub { ... },
+      ...
+    );
   }
 
 Note that this method is still B<returning> the dispatch code - just like
