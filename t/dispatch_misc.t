@@ -17,6 +17,11 @@ my @dispatch;
     package MiscTest;
     sub dispatch_request { @dispatch }
     sub string_method { [ 999, [], [""] ]; }
+
+    sub can {
+        die "Passed undef to can, this blows up on 5.8" unless defined($_[1]);
+        shift->SUPER::can(@_)
+    }
 }
 
 my $app = MiscTest->new;
@@ -33,6 +38,7 @@ middleware_as_only_route();
 route_returns_middleware_plus_extra();
 route_returns_undef();
 matcher_nonsub_pair();
+matcher_undef_method();
 
 done_testing();
 
@@ -200,5 +206,15 @@ sub matcher_nonsub_pair {
 
     cmp_ok $get->code, '==', 500, "a route definition that pairs a WD::Matcher a non-sub dies";
     like $get->content, qr[No idea how we got here with Web::Dispatch::M],
+      "the error message points out the broken definition";
+}
+
+sub matcher_undef_method {
+    @dispatch = ( 'GET', undef );
+
+    my $get = run_request( GET => 'http://localhost/' );
+
+    cmp_ok $get->code, '==', 500, "a route definition that pairs a WD::Matcher a non-sub dies";
+    like $get->content, qr[No idea how we got here with GET],
       "the error message points out the broken definition";
 }

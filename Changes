@@ -1,5 +1,7 @@
 Revision history for Web-Simple
 
+  - produce a sensible error for (GET => undef) on 5.8
+
 0.030 - 2014-08-07
   - make dispatch_misc.t handle Plack's MockHTTP's on error behaviour changing
 

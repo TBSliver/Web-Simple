@@ -128,7 +128,7 @@ sub _to_try {
     }
   } elsif (!ref($try)
     and (ref($more->[0]) eq 'CODE'
-      or (!ref($more->[0]) and $self->dispatch_object
+      or ($more->[0] and !ref($more->[0]) and $self->dispatch_object
         and $self->dispatch_object->can($more->[0])))
   ) {
     $self->_construct_node(match => $try, run => shift(@$more));
