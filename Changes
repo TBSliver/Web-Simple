@@ -1,5 +1,6 @@
 Revision history for Web-Simple
 
+  - rewrite docs to use string form first
   - handle empty query parameters
   - produce a sensible error for (GET => undef) on 5.8
 
