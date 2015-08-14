@@ -104,7 +104,7 @@ sub get_unpacked_uploads_from {
     (my $params = $_[0]) =~ s/\+/ /g;
     my ($name, $value);
     foreach my $pair (split(/[&;](?:\s+)?/, $params)) {
-      next unless (($name, $value) = split(/=/, $pair, 2)) == 2;
+      $value = 1 unless (($name, $value) = split(/=/, $pair, 2)) == 2;
 
       s/$DECODE/$hex_chr{$1}/gs for ($name, $value);
       $_ = decode_utf8 $_ for ($name, $value);

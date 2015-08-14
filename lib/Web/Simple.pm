@@ -526,7 +526,9 @@ The param spec is elements of one of the following forms:
 
 separated by the C<&> character. The arguments added to the request are
 one per non-C<:>/C<*> parameter (scalar for normal, arrayref for multiple),
-plus if any C<:>/C<*> specs exist a hashref containing those values.
+plus if any C<:>/C<*> specs exist a hashref containing those values. If a
+parameter has no value, i.e. appears as '?foo&', a value of 1 will be
+captured.
 
 Please note that if you specify a multiple type parameter match, you are
 ensured of getting an arrayref for the value, EVEN if the current incoming

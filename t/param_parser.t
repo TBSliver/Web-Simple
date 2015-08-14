@@ -5,7 +5,7 @@ use Test::More qw(no_plan);
 
 use Web::Dispatch::ParamParser;
 
-my $param_sample = 'foo=bar&baz=quux&foo=%2F';
+my $param_sample = 'foo=bar&baz=quux&foo=%2F&xyzzy';
 my $unpacked = {
   baz => [
     "quux"
@@ -13,11 +13,14 @@ my $unpacked = {
   foo => [
     "bar",
     "/"
+  ],
+  xyzzy => [
+    1
   ]
 };
 
 is_deeply(
-  Web::Dispatch::ParamParser::_unpack_params('foo=bar&baz=quux&foo=%2F'),
+  Web::Dispatch::ParamParser::_unpack_params('foo=bar&baz=quux&foo=%2F&xyzzy'),
   $unpacked,
   'Simple unpack ok'
 );
@@ -36,7 +39,7 @@ is_deeply(
   'Unpack cached ok'
 );
 
-sub FakeBody::param { { baz => "quux", foo => [ "bar", "/" ] } }
+sub FakeBody::param { { baz => "quux", foo => [ "bar", "/" ], xyzzy => [ 1 ] } }
 
 my $body_env = {
   CONTENT_TYPE   => "multipart/form-data",
