@@ -27,6 +27,9 @@ use Test::More qw(no_plan);
         [ join(' ',@{$_[1]}{qw(biff bong)}) ]
       ]
     },
+    sub (GET + ?foo=) {
+      [ 200, [ 'Content-type' => 'text/plain' ], [ $_[1] ] ];
+    },
   }
 }
 
@@ -37,7 +40,7 @@ sub run_request { $app->run_test_request(@_); }
 
 my $get = run_request(GET 'http://localhost/');
 
-cmp_ok($get->code, '==', 404, '404 on GET');
+cmp_ok($get->code, '==', 404, '404 on plain GET');
 
 my $no_body = run_request(POST 'http://localhost/');
 
@@ -126,3 +129,11 @@ is(
   'TESTFILE',
   'Actual upload returns filename ok'
 );
+
+my $query_simple = run_request(GET 'http://localhost?foo=bar');
+
+is($query_simple->content, 'bar', 'simple query string ok');
+
+my $query_json = run_request(GET 'http://localhost?j={"foo": "bar"}');
+
+is($query_simple->content, 'bar', 'json query string ok');

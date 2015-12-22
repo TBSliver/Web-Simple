@@ -13,7 +13,20 @@ sub ORIG_ENV () { 'Web::Dispatch.original_env' }
 
 sub get_unpacked_query_from {
   return ($_[0]->{+ORIG_ENV}||$_[0])->{+UNPACKED_QUERY} ||= do {
-    _unpack_params($_[0]->{QUERY_STRING})
+    my $p = _unpack_params($_[0]->{QUERY_STRING});
+    unless (keys %$p == 1 and exists $p->{j} and ref($p->{j}) eq 'ARRAY' and @{$p->{j}} == 1 and $p->{j} =~ /^{/) {
+      $p;
+    } else {
+      require JSON::MaybeXS;
+      if (my $data = eval {
+        my %data = %{JSON::MaybeXS::decode_json($p->{j}[0])};
+        +{ map +($_ => [ $data{$_} ]), keys %data };
+      }) {
+        $data
+      } else {
+        {}
+      }
+    }
   };
 }
 
