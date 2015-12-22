@@ -136,4 +136,4 @@ is($query_simple->content, 'bar', 'simple query string ok');
 
 my $query_json = run_request(GET 'http://localhost?j={"foo": "bar"}');
 
-is($query_simple->content, 'bar', 'json query string ok');
+is($query_json->content, 'bar', 'json query string ok');
